@@ -41,6 +41,16 @@
         <!-- Main hero unit for a primary marketing message or call to action -->
         <div class="hero-unit">
           <h3>View ASM dump for $clzName in $jarFile.origName</h3>
+          <p>
+              <a href="/jarviewer/view.htm?id=$id&clz=${clzName}">Edit</a> |
+              <a href="/jarviewer/cfrsource.htm?id=$id&clz=${clzName}">CFR-Source</a> |
+              <a href="/jarviewer/source.htm?id=$id&clz=${clzName}">Bytecode</a> |
+              <a href="/jarviewer/source.htm?id=$id&clz=${clzName}&type=decomp">jclazz-Source</a> |
+              <a href="/jarviewer/graph.htm?id=$id&clz=${clzName}&type=mydeps">Dependencies</a> |
+              <a href="/jarviewer/graph.htm?id=$id&clz=${clzName}&type=depsonme">DependsOnMe</a>
+</p>
+
+
 	        <!-- You also need to add some content to highlight, but that is covered elsewhere. -->
 			<script type="syntaxhighlighter" class="brush: java"><![CDATA[$code]]></script>
 			 

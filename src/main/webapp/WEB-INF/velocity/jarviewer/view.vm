@@ -43,6 +43,14 @@
 	     submit  : 'OK',
 	     tooltip : 'Click to edit',
 	 });
+   $("#treeFilter").on("change",function() {
+      var filter = this.value;
+      localStorage.treeFilterValue=filter;
+      $("#jar .package").each(function() {
+        $(this).toggle ($(this).find("span").text().indexOf(filter)!==-1);
+      });
+   }).val(localStorage.treeFilterValue||"").change();
+
   });
   
   function submitForm() {
@@ -80,12 +88,13 @@
 #end
     <div class="container-fluid">
       <div class="sidebar">
-        <div class="well">
+        <input type="search" id="treeFilter" value="" placeholder="filter by package name...">
+        <div class="well" style="padding:2px">
 			<ul id="jar" class="filetree">
 			<li><span class="folder">$origName</span>
 				<ul>
 				#foreach ($entry in $classMap.tree.entrySet())
-				  <li class="#if($entry.key.equals("$openPkg"))  #else closed #end"><span class="folder">$entry.key</span>
+				  <li class="package #if($entry.key.equals("$openPkg"))  #else closed #end"><span class="folder">$entry.key</span>
 					  <ul>
 					  #foreach($clazz in $entry.value)
 					  	<li class="file"><a href="/jarviewer/view.htm?id=$id&clz=${clazz.className}" title="$clazz.className">${clazz.classShortName}</a></li>
@@ -115,11 +124,12 @@
             <table>
               <tr><td>Class Name</td><td><div id="clazzName" class="editable" ftype="class" fdesc="" origValue="$clzInfo.className">$clzInfo.className</div></td></tr>
               <tr><td></td><td>
-              <a href="/jarviewer/source.htm?id=$id&clz=${clzInfo.className}.class" target="_blank">Bytecode</a> |
-              <a href="/jarviewer/source.htm?id=$id&clz=${clzInfo.className}.class&type=decomp" target="_blank">Source</a> |
-              <a href="/jarviewer/graph.htm?id=$id&clz=${clzInfo.className}&type=mydeps" target="_blank">Dependencies</a> |
-              <a href="/jarviewer/graph.htm?id=$id&clz=${clzInfo.className}&type=depsonme" target="_blank">DependsOnMe</a>
-              </td></tr>
+                      <a href="/jarviewer/cfrsource.htm?id=$id&clz=${clzInfo.className}" target="_blank">CFR-Source</a> |
+                      <a href="/jarviewer/source.htm?id=$id&clz=${clzInfo.className}" target="_blank">Bytecode</a> |
+                      <a href="/jarviewer/source.htm?id=$id&clz=${clzInfo.className}&type=decomp" target="_blank">jclazz-Source</a> |
+                      <a href="/jarviewer/graph.htm?id=$id&clz=${clzInfo.className}&type=mydeps" target="_blank">Dependencies</a> |
+                      <a href="/jarviewer/graph.htm?id=$id&clz=${clzInfo.className}&type=depsonme" target="_blank">DependsOnMe</a>
+                      </td></tr>
             <tr><td>Flags</td><td>
                 #if($clzInfo.public)#red("public")#end
                 #if($clzInfo.abstract && !$clzInfo.interface)#red("abstract")#end

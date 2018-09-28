@@ -18,17 +18,13 @@ import org.hydra.util.Lists.Pair;
 public class RenameConfig {
     private Map<String, ClassRenameInfo> config = new HashMap<String, ClassRenameInfo>();
 
-    public static RenameConfig loadFromFile(String file) {
+    public static RenameConfig loadFromFile(String file) throws Exception {
         RenameConfig config = new RenameConfig();
-        try {
-            parse(config, new FileReader(file));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+        parse(config, new FileReader(file));
         return config;
     }
 
-    public static RenameConfig loadFromString(String content) {
+    public static RenameConfig loadFromString(String content) throws Exception {
         RenameConfig config = new RenameConfig();
         parse(config, new StringReader(content));
         return config;
@@ -97,30 +93,30 @@ public class RenameConfig {
         return null;
     }
 
-    private void addClass(String oldName, String newName) {
+    private void addClass(String oldName, String newName) throws Exception {
         ClassRenameInfo info = this.config.get(oldName);
         if (info == null) {
             info = new ClassRenameInfo();
             info.setClassInfo(new Pair<String, String>(oldName, newName));
             this.config.put(oldName, info);
         } else {
-            Log.error("config error? %s already exists", oldName);
+            throw new Exception("config error? "+oldName+" already exists");
         }
     }
 
-    private void addField(String clazzName, String fieldName, String fieldType, String newName) {
+    private void addField(String clazzName, String fieldName, String fieldType, String newName) throws Exception {
         ClassRenameInfo info = this.config.get(clazzName);
         if (info == null) {
-            Log.error("config error? %s not exists", clazzName);
+            throw new Exception("config error? "+clazzName+" not exists");
         } else {
             info.getFieldInfo().put(conbineKey(fieldName, fieldType), newName);
         }
     }
 
-    private void addMethod(String clazzName, String methodName, String methodDesc, String newName) {
+    private void addMethod(String clazzName, String methodName, String methodDesc, String newName) throws Exception {
         ClassRenameInfo info = this.config.get(clazzName);
         if (info == null) {
-            Log.error("config error? %s not exists", clazzName);
+            throw new Exception("config error? "+clazzName+" not exists");
         } else {
             info.getMethodInfo().put(conbineKey(methodName, methodDesc), newName);
         }
@@ -130,43 +126,37 @@ public class RenameConfig {
         return methodName + ":" + methodDesc;
     }
 
-    private static void parse(RenameConfig config, Reader readerx) {
-        try {
-            BufferedReader reader = new BufferedReader(readerx);
-            String line = null;
-            String currentClass = null;
-            while ((line = reader.readLine()) != null) {
-                line = line.trim().replace('.', '/');
-                
-                if (line.length() == 0)
-                    continue;
-                String[] tokens = Utils.tokens(line);
-                if (tokens != null && tokens.length > 3) {
-                    /**
-                     * <pre>
-                     * class:  org.hydra.pkg.OldClassName to org.hydra.pkg.NewClassName
-                     * method: oldMethodName (IILjava/lang/String;)Ljava/lang/Integer; to newClassName
-                     * field:  oldFieldName Ljava/lang/String; to newFieldName
-                     * </pre>
-                     */
-                    if ("class:".equalsIgnoreCase(tokens[0])) {
-                        currentClass = tokens[1];
-                        config.addClass(currentClass, tokens[3]);
-                    } else if ("method:".equalsIgnoreCase(tokens[0]) && tokens.length > 4) {
-                        config.addMethod(currentClass, tokens[1], tokens[2], tokens[4]);
-                    } else if ("field:".equalsIgnoreCase(tokens[0]) && tokens.length > 4) {
-                        config.addField(currentClass, tokens[1], tokens[2], tokens[4]);
-                    } else if (!line.startsWith("#")) {
-                        Log.error("error config line %s", line);
-                    }
+    private static void parse(RenameConfig config, Reader readerx) throws Exception {
+        BufferedReader reader = new BufferedReader(readerx);
+        String line = null;
+        String currentClass = null;
+        while ((line = reader.readLine()) != null) {
+            line = line.trim().replace('.', '/');
+            
+            if (line.length() == 0)
+                continue;
+            String[] tokens = Utils.tokens(line);
+            if (tokens != null && tokens.length > 3) {
+                /**
+                    * <pre>
+                    * class:  org.hydra.pkg.OldClassName to org.hydra.pkg.NewClassName
+                    * method: oldMethodName (IILjava/lang/String;)Ljava/lang/Integer; to newClassName
+                    * field:  oldFieldName Ljava/lang/String; to newFieldName
+                    * </pre>
+                    */
+                if ("class:".equalsIgnoreCase(tokens[0])) {
+                    currentClass = tokens[1];
+                    config.addClass(currentClass, tokens[3]);
+                } else if ("method:".equalsIgnoreCase(tokens[0]) && tokens.length > 4) {
+                    config.addMethod(currentClass, tokens[1], tokens[2], tokens[4]);
+                } else if ("field:".equalsIgnoreCase(tokens[0]) && tokens.length > 4) {
+                    config.addField(currentClass, tokens[1], tokens[2], tokens[4]);
                 } else if (!line.startsWith("#")) {
-                    Log.error("error config line %s", line);
+                    throw new Exception("error config line "+ line);
                 }
+            } else if (!line.startsWith("#")) {
+                throw new Exception("error config line "+ line);
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 

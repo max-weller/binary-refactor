@@ -12,6 +12,7 @@ import java.io.Writer;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.jar.JarEntry;
@@ -37,6 +38,19 @@ import ru.andrew.jclazz.core.Clazz;
 import ru.andrew.jclazz.core.ClazzException;
 import ru.andrew.jclazz.decompiler.ClazzSourceView;
 import ru.andrew.jclazz.decompiler.ClazzSourceViewFactory;
+
+import org.benf.cfr.reader.state.ClassFileSourceImpl;
+import org.benf.cfr.reader.state.DCCommonState;
+import org.benf.cfr.reader.util.output.ToStringDumper;
+import org.benf.cfr.reader.util.getopt.Options;
+import org.benf.cfr.reader.util.getopt.OptionsImpl;
+import org.benf.cfr.reader.state.TypeUsageCollector;
+import org.benf.cfr.reader.state.TypeUsageCollectorImpl;
+import org.benf.cfr.reader.bytecode.analysis.types.ClassNameUtils;
+import org.benf.cfr.reader.entities.ClassFile;
+import org.benf.cfr.reader.entities.attributes.AttributeInnerClasses;
+import org.benf.cfr.reader.entities.innerclass.InnerClassAttributeInfo;
+import org.benf.cfr.reader.bytecode.analysis.types.JavaTypeInstance;
 
 @Controller
 @RequestMapping("/jarviewer")
@@ -184,22 +198,42 @@ public class ViewController {
         FileItem path = (FileItem) Database.get(jarid).getObj();
         model.addAttribute("jarFile", path);
         try {
-            JarFile jarFile = new JarFile(path.getFullName());
             String code = "";
-
-            JarEntry entry = jarFile.getJarEntry(clazzName);
+            JarFile jarFile = new JarFile(path.getFullName());
+            
+            JarEntry entry = jarFile.getJarEntry(clazzName + ".class");
             InputStream inputStream = jarFile.getInputStream(entry);
 
             if (type.equals("asmdump")) {
                 code = asmDump(inputStream);
             } else if (type.equals("decomp")) {
-                code = jclazzDecomp(clazzName, inputStream);
+                code = jclazzDecomp(clazzName + ".class", inputStream);
             }
             model.addAttribute("code", code);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+
+    }
+
+    @RequestMapping("/cfrsource")
+    public void cfrSource(Model model, @RequestParam("id") String jarid, @RequestParam("clz") String clazzName) {
+        model.addAttribute("clzName", clazzName);
+        model.addAttribute("id", jarid);
+
+        if (Database.get(jarid) == null) {
+            return;
+        }
+
+        FileItem path = (FileItem) Database.get(jarid).getObj();
+        model.addAttribute("jarFile", path);
+        String code = "";
+        code = cfrDecomp(path.getFullName(),
+            "/jarviewer/cfrsource.htm?id="+jarid+"&clz=",
+            clazzName + ".class");
+        model.addAttribute("code", code);
+        
 
     }
 
@@ -223,6 +257,56 @@ public class ViewController {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private String cfrDecomp(String jarfilename, String urlPrefix, String clazzName) {
+        try {
+            Map<String, String> optionsMap = new HashMap<String, String>();
+            Options options = new OptionsImpl(optionsMap);
+            ClassFileSourceImpl classFileSource = new ClassFileSourceImpl(options);
+
+            classFileSource.clearConfiguration();
+            DCCommonState dcCommonState = new DCCommonState(options, classFileSource);
+            //DumperFactory dumperFactory = new DumperFactoryImpl(options);
+
+            //List<JavaTypeInstance> types = 
+            dcCommonState.explicitlyLoadJar(jarfilename);
+            //classFileSource.addJar(jarfilename);
+
+            //String classfilepath = ClassNameUtils.convertToPath(clazzName) + ".class";
+            ClassFile c = dcCommonState.getClassFile(clazzName);
+            c.loadInnerClasses(dcCommonState);
+            c.analyseTop(dcCommonState);
+
+            TypeUsageCollector collectingDumper = new TypeUsageCollectorImpl(c);
+            c.collectTypeUsages(collectingDumper);
+            //d = dumperFactory.getNewTopLevelDumper(c.getClassType(), summaryDumper, collectingDumper.getTypeUsageInformation(), illegalIdentifierDump);
+                // return new StdIODumper(typeUsageInformation, this.options, illegalIdentifierDump);
+
+            //c.dump(d);
+            //return ToStringDumper.toString(c);
+            AttributeInnerClasses attributeInnerClasses = (AttributeInnerClasses)c.getAttributeByName("InnerClasses");
+            if(attributeInnerClasses == null){
+                System.out.println("has no inner classes");
+            }else {
+                 List<InnerClassAttributeInfo> list=attributeInnerClasses.getInnerClassAttributeInfoList();
+                 for (InnerClassAttributeInfo innerClassAttributeInfo : list) {
+                    JavaTypeInstance innerType = innerClassAttributeInfo.getInnerClassInfo();
+                    System.out.println("inner class: "+innerType.getRawName());
+                 }
+            }
+        
+
+            CfrToHtmlDumper dumper = new CfrToHtmlDumper(collectingDumper.getTypeUsageInformation());
+            dumper.urlPrefix = urlPrefix;
+            return dumper.dump(c).toString();
+
+            //return CfrToHtmlDumper.toString(c);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return e.toString();
+        }
     }
 
     @RequestMapping(value = "download")

@@ -134,6 +134,14 @@
             <version>${servletapi-version}</version>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.benf.cfr</groupId>
+            <artifactId>cfr</artifactId>
+            <version>0.133</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/cfr_0_133_patched.jar</systemPath>
+        </dependency>
     </dependencies>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

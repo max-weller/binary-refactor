@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Source view</title>
+    <meta name="author" content="Argan Wang">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le styles -->
+    <link href="/static/css/bootstrap-1.4.0.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+      }
+    </style>
+    
+    <script src="/static/js/jquery.min.1.7.1.js"></script>
+    <!-- Include required JS files -->
+	<script type="text/javascript" src="/static/js/sh/shCore.js"></script>
+	 
+	<!--
+	    At least one brush, here we choose JS. You need to include a brush for every 
+	    language you want to highlight
+	-->
+	<script type="text/javascript" src="/static/js/sh/shBrushJava.js"></script>
+	 
+	<!-- Include *at least* the core style and default theme -->
+	<link href="/static/css/sh/shCore.css" rel="stylesheet" type="text/css" />
+	<link href="/static/css/sh/shThemeDefault.css" rel="stylesheet" type="text/css" />
+
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="images/favicon.ico">
+  </head>
+
+  <body>
+    #include("/menu.vm")
+	    <div class="content">
+        <!-- Main hero unit for a primary marketing message or call to action -->
+        <div class="hero-unit" style="padding:10px  60px">
+        <input type=button id=storeChanges class="btn success" value="Save changes" style="float:right">
+          <h3>View Code dump for $clzName in $jarFile.origName</h3>
+    
+<label for="hierarchyColors" class=checkbox style="float:right"><input type="checkbox" id="hierarchyColors"> hierarchyColors</label>          
+<p>
+              <a href="/jarviewer/view.htm?id=$id&clz=${clzName}">Edit</a> |
+              <b>CFR-Source</b> |
+              <a href="/jarviewer/source.htm?id=$id&clz=${clzName}">Bytecode</a> |
+              <a href="/jarviewer/source.htm?id=$id&clz=${clzName}&type=decomp">jclazz-Source</a> |
+              <a href="/jarviewer/graph.htm?id=$id&clz=${clzName}&type=mydeps">Dependencies</a> |
+              <a href="/jarviewer/graph.htm?id=$id&clz=${clzName}&type=depsonme">DependsOnMe</a>
+</p>
+        </div>
+			<pre id="code">$code</pre>
+			 
+             <script>
+             var jarId="$id";
+             var thisClassName="$clzName";
+
+             var renameConfig={};
+             function ClassRenameInfo(className) {
+                 this.oldName=className;
+                 this.newName=className;
+                 this.members={};
+             }
+             ClassRenameInfo.prototype.put=function(type,oldName,sig,newName){
+                 this.members[type+": "+oldName+" "+sig]=newName;
+             }
+             ClassRenameInfo.prototype.toString=function(){
+                 var out="class: "+this.oldName+" to "+this.newName+"\n";
+                 for(var key in this.members) {
+                     if(!this.members.hasOwnProperty(key))continue;
+                     out += key + " to " + this.members[key] + "\n";
+                 }
+                 return out;
+             }
+             function putClass(name, newName) {
+                 if (!renameConfig[name]) renameConfig[name]=new ClassRenameInfo(name);
+                 if(newName) renameConfig[name].newName=newName;
+             }
+             function putMember(className,type,oldName,sig,newName ) {
+                 putClass(className);
+                 renameConfig[className].put(type,oldName,sig,newName);
+             }
+
+             $("#hierarchyColors").change(function() {
+                 $("#code").toggleClass("hierarchyColors",this.value)
+             });
+             $(".typeRef").contextmenu(function() {
+                 var classFile = this.getAttribute("data-classfile");
+                 var idRefNew = this.getAttribute("data-classfile-new");
+                 if(!idRefNew) idRefNew=classFile;
+                 var res=prompt("Rename type "+classFile, idRefNew);
+                 if (res) {
+                     putClass(classFile, res);
+                     this.setAttribute("data-classfile-new", res);
+                     $('.typeRef[data-classfile="'+classFile+'"]').text(res).addClass("changed");
+                 }
+                 return false;
+             });
+             $(".identifierRef").contextmenu(function() {
+                 var classFile = this.getAttribute("data-classfile");
+                 var idType = this.getAttribute("data-identifiertype");
+                 var idRef = this.getAttribute("data-identifier");
+                 var idSig = this.getAttribute("data-signature");
+                 var res=prompt("Rename "+idType+" "+idRef +" of "+classFile+"\nSignature: "+idSig, this.innerText);
+                 if(res) {
+                    $('.identifierRef[data-classfile="'+classFile+'"][data-identifier="'+idRef+'"][data-signature="'+idSig+'"]').text(res).addClass("changed");
+                    putMember(classFile, idType, idRef, idSig, res);
+                 }
+                 return false;
+             });
+             $("#storeChanges").click(function() {
+                 var out="";
+                 for(var className in renameConfig) {
+                     if(!renameConfig.hasOwnProperty(className))continue;
+
+                     out+=renameConfig[className].toString()+"\n";
+                 }
+                 if(!confirm(out))return;
+                 $.post("/renamer/batch.htm", {id: jarId, renameConfig: out}, function(ok,a1,xhr) {
+                     console.log("batch call result:",ok,a1,xhr)
+                     if (xhr.status==200){
+                        alert("Done");
+                        if(renameConfig[thisClassName]) location.href="/jarviewer/cfrsource.htm?id="+jarId+"&clz="+renameConfig[thisClassName].newName;
+                     }else
+                        alert(ok);
+                 }, "text");
+             })
+             </script>
+             <style>
+                .minilabel{background:#888;color:white;text-shadow:1px 1px 1px #333;border-radius:2px;padding:2px;font-size:80%;}
+                .minilabel.red{background:#b33;}
+                .minilabel.blue{background:#33b;}
+                .hierarchyColors span {background:hsla(0,40%,80%,0.3)}
+                .hierarchyColors span span {background:hsla(30,40%,80%,1)}
+                .hierarchyColors span span span{background:hsla(60,40%,80%,1)}
+                .hierarchyColors span span span span{background:hsla(90,40%,80%,1)}
+                .hierarchyColors span span span span span{background:hsla(120,40%,80%,1)}
+                
+
+
+                .hierarchyColors span span:hover {box-shadow:0 0 5px rgba(77,77,77,0.5)}
+                .hierarchyColors span span span:hover {box-shadow:0 0 5px rgba(77,77,77,0.9)}
+                a.typeRef { color: #22b; _font-weight: bold; }
+                a.identifierRef { color: #f0f; font-weight: bold; }
+                a.identifierRef.MethodPrototype, a.identifierRef.Field { font-size: 125%; }
+                .identifierRef.method { color: #600; }
+                .identifierRef.field, .identifierRef.Field, .identifierRef.FieldVariable{ color: #060; }
+                a:target { background:#111;color:#ffa!important; }
+                a.changed{background:#fea!important;font-style:italic;color:#222!important;}
+             </style>
+        #include("/footer.vm")
+    </body>
+</html>
