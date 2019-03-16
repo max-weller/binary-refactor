@@ -14,7 +14,7 @@
   </script>
   </head>
   <body>
-  #include("/menu.vm")
+  #parse("/menu.vm")
 $date <br>
 
 <ul id="jar" class="filetree">

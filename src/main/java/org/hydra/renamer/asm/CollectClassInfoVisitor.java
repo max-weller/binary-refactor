@@ -45,7 +45,7 @@ public class CollectClassInfoVisitor extends EmptyVisitor {
         MethodInfo methodInfo = new MethodInfo(name, desc, access, exceptions);
         methodInfo.setExceptions(exceptions);
         this.map.getClassInfo(this.className).addMethod(methodInfo);
-        return new CollectDepsMethodVisitor(methodInfo);
+        return new CollectDepsMethodVisitor(methodInfo, map);
     }
 
     @Override

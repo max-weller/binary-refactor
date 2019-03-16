@@ -1,17 +1,23 @@
 package org.hydra.renamer.asm;
 
+import org.hydra.renamer.ClassMap;
 import org.hydra.renamer.MethodInfo;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.EmptyVisitor;
 
+import java.util.HashMap;
+
 public class CollectDepsMethodVisitor extends EmptyVisitor {
 
     private MethodInfo methodInfo;
+    private ClassMap map;
 
-    public CollectDepsMethodVisitor(MethodInfo methodInfo) {
+
+    public CollectDepsMethodVisitor(MethodInfo methodInfo, ClassMap map) {
         this.methodInfo = methodInfo;
+        this.map = map;
     }
 
     @Override
@@ -35,6 +41,7 @@ public class CollectDepsMethodVisitor extends EmptyVisitor {
     public void visitFieldInsn(int opcode, String owner, String name, String desc) {
         this.methodInfo.addDependency(owner);
         this.methodInfo.addDependency(getClassName(Type.getType(desc)));
+        map.addXref(owner+" "+name+" "+desc, methodInfo);
     }
 
     @Override
@@ -49,6 +56,7 @@ public class CollectDepsMethodVisitor extends EmptyVisitor {
                 }
             }
         }
+        map.addXref(owner+" "+name+" "+desc, methodInfo);
     }
 
     private String getClassName(Type type) {

@@ -13,7 +13,12 @@ public class Main {
         String config = args[0];
         String jarFile = args[1];
 
-        Renamer.rename(config, jarFile);
+        try {
+            Renamer.rename(config, jarFile);
+        } catch(Exception ex) {
+            ex.printStackTrace();
+            System.exit(1);
+        }
 
         Log.debug("rename classes/methods/fields in %s based %s", jarFile, config);
     }

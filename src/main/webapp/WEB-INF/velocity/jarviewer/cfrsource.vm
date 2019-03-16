@@ -1,48 +1,21 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Source view</title>
-    <meta name="author" content="Argan Wang">
-
-    <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
-    <!--[if lt IE 9]>
-      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-
-    <!-- Le styles -->
-    <link href="/static/css/bootstrap-1.4.0.css" rel="stylesheet">
-    <style type="text/css">
-      body {
-        padding-top: 60px;
-      }
-    </style>
-    
-    <script src="/static/js/jquery.min.1.7.1.js"></script>
-    <!-- Include required JS files -->
-	<script type="text/javascript" src="/static/js/sh/shCore.js"></script>
-	 
-	<!--
-	    At least one brush, here we choose JS. You need to include a brush for every 
-	    language you want to highlight
-	-->
-	<script type="text/javascript" src="/static/js/sh/shBrushJava.js"></script>
-	 
-	<!-- Include *at least* the core style and default theme -->
-	<link href="/static/css/sh/shCore.css" rel="stylesheet" type="text/css" />
-	<link href="/static/css/sh/shThemeDefault.css" rel="stylesheet" type="text/css" />
-
-    <!-- Le fav and touch icons -->
-    <link rel="shortcut icon" href="images/favicon.ico">
-  </head>
+#set($pageTitle="$clzName - Source view")
+#parse("/pageheader.vm")
 
   <body>
-    #include("/menu.vm")
-	    <div class="content">
+    #parse("/menu.vm")
+  <div id="popupDiv" style="display:none"></div>
+
+
+	    <div class="container">
         <!-- Main hero unit for a primary marketing message or call to action -->
-        <div class="hero-unit" style="padding:10px  60px">
-        <input type=button id=storeChanges class="btn success" value="Save changes" style="float:right">
-          <h3>View Code dump for $clzName in $jarFile.origName</h3>
+        <div class="hero-unit" style="padding:10px  60px;margin:0;">
+        <input type=button id=storeChanges class="btn btn-default" value="Save changes" style="float:right">
+          <h3 class="classfile">#set($pathItems = $clzName.split("/"))
+      #foreach($item in $pathItems)
+      <span class="itm">$item</span>
+      #end</h3>
+          
+            <footer class="blockquote-footer"> in $jarFile.origName</footer>
     
 <label for="hierarchyColors" class=checkbox style="float:right"><input type="checkbox" id="hierarchyColors"> hierarchyColors</label>          
 <p>
@@ -55,10 +28,29 @@
 </p>
         </div>
 			<pre id="code">$code</pre>
-			 
+            <div style="padding:2px;width:260px;position:fixed;right:0;bottom:0;top:60px;overflow:auto;background:#eee;">
+                <input type="search" id="treeFilter" value="" placeholder="filter by package name...">
+                <div id="filetreeContainer" ></div>
+            </div>
+
              <script>
              var jarId="$id";
              var thisClassName="$clzName";
+
+             try {
+               window.bcastChannel = new BroadcastChannel(jarId);
+               bcastChannel.onmessage=function(e) {
+                 if (e.data.renameClass)
+                   $('.typeRef[data-classfile="'+e.data.renameClass+'"]').text(e.data.to).addClass("changed");
+                 if (e.data.renameId)
+                   $('.identifierRef[data-classfile="'+e.data.classFile+'"][data-identifier="'+e.data.renameId+'"][data-signature="'+e.data.sig+'"]').text(e.data.to).addClass("changed");
+               }
+             }catch(e){console.warn("no support for broadcast channel?",e)}
+
+              function setDirty() {
+             	  $("#storeChanges").attr("class", "btn btn-success");
+             	  window.onbeforeunload=function(){return "Unsaved changes";}
+              }
 
              var renameConfig={};
              function ClassRenameInfo(className) {
@@ -98,6 +90,8 @@
                      putClass(classFile, res);
                      this.setAttribute("data-classfile-new", res);
                      $('.typeRef[data-classfile="'+classFile+'"]').text(res).addClass("changed");
+                     if (bcastChannel) bcastChannel.postMessage({renameClass:classFile, to:res});
+                     setDirty();
                  }
                  return false;
              });
@@ -109,10 +103,37 @@
                  var res=prompt("Rename "+idType+" "+idRef +" of "+classFile+"\nSignature: "+idSig, this.innerText);
                  if(res) {
                     $('.identifierRef[data-classfile="'+classFile+'"][data-identifier="'+idRef+'"][data-signature="'+idSig+'"]').text(res).addClass("changed");
+                    if (bcastChannel) bcastChannel.postMessage({classFile:classFile,renameId:idRef,sig:idSig, to:res});
                     putMember(classFile, idType, idRef, idSig, res);
+                    setDirty();
                  }
                  return false;
              });
+             $(".identifierRef").mouseenter(function(e) {
+                 var classFile = this.getAttribute("data-classfile");
+                 var idType = this.getAttribute("data-identifiertype");
+                 var idRef = this.getAttribute("data-identifier");
+                 var idSig = this.getAttribute("data-signature");
+                 console.log(e);
+                 $.get("/jarviewer/xref.htm?id="+jarId+"&clz="+classFile+"&member="+escape(idRef)+"&sig="+escape(idSig), function(result) {
+                 	  console.log(result);
+                 	  var popup = $("#popupDiv").html("").show();
+                 	  for (var i in result) {
+                 	  	  $("<a>").text(result[i]).attr("href", "/jarviewer/cfrsource.htm?id="+jarId+"&clz=" + result[i]).appendTo(popup);
+                    }
+                    popup.css({top:(e.pageY+10)+"px", left:(e.pageX-25)+"px",});
+
+                 }, "json");
+               clearTimeout(hidePopupTimer);
+             });
+             $("#popupDiv").mouseenter(function(e) {
+               clearTimeout(hidePopupTimer);
+             })
+             $("#popupDiv, .identifierRef").mouseleave(function(e) {
+             	  hidePopupTimer=setTimeout(function() {
+             	  	$("#popupDiv").hide();
+                },500)
+             })
              $("#storeChanges").click(function() {
                  var out="";
                  for(var className in renameConfig) {
@@ -125,6 +146,7 @@
                      console.log("batch call result:",ok,a1,xhr)
                      if (xhr.status==200){
                         alert("Done");
+                        window.onbeforeunload=null
                         if(renameConfig[thisClassName]) location.href="/jarviewer/cfrsource.htm?id="+jarId+"&clz="+renameConfig[thisClassName].newName;
                      }else
                         alert(ok);
@@ -132,6 +154,8 @@
              })
              </script>
              <style>
+                .container {margin-left:10px;margin-right:265px;width:auto;}
+
                 .minilabel{background:#888;color:white;text-shadow:1px 1px 1px #333;border-radius:2px;padding:2px;font-size:80%;}
                 .minilabel.red{background:#b33;}
                 .minilabel.blue{background:#33b;}
@@ -152,6 +176,11 @@
                 .identifierRef.field, .identifierRef.Field, .identifierRef.FieldVariable{ color: #060; }
                 a:target { background:#111;color:#ffa!important; }
                 a.changed{background:#fea!important;font-style:italic;color:#222!important;}
+
+                #popupDiv{position:absolute; width:450px; min-height:100px; max-height: 400px; overflow: scroll; background: rgba(11,11,11,0.9);}
+                #popupDiv a{display:block;padding: 1px 5px;border-bottom:1px solid #777;color:white;}
+                #popupDiv a:hover{background-color: #0c5460;}
+
              </style>
         #include("/footer.vm")
     </body>

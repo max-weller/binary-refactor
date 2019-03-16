@@ -17,7 +17,7 @@ public class RenamerController {
 
     @RequestMapping("/edit")
     public String editClass(Model model, @RequestParam("id") String jar, @RequestParam("className") String clazzName,
-            @RequestParam("newClassName") String newClassName, @RequestParam("renameConfig") String renameConfig) {
+            @RequestParam("newClassName") String newClassName, @RequestParam("renameConfig") String renameConfig) throws Exception {
 
         if (clazzName != null) {
             clazzName = clazzName.replace('.', '/');
@@ -53,7 +53,7 @@ public class RenamerController {
     }
 
     @RequestMapping(value = "/batch", method = RequestMethod.POST)
-    public String batch(Model model, @RequestParam("id") String jar, @RequestParam("renameConfig") String renameConfig) {
+    public String batch(Model model, @RequestParam("id") String jar, @RequestParam("renameConfig") String renameConfig) throws Exception {
         model.addAttribute("id", jar);
 
         if (Database.get(jar) != null) {
@@ -67,7 +67,7 @@ public class RenamerController {
         return "/renamer/script";
     }
 
-    private RenameConfig executeRename(String jar, String renameConfig) {
+    private RenameConfig executeRename(String jar, String renameConfig) throws Exception {
         RenameConfig config = RenameConfig.loadFromString(renameConfig);
 
         FileItem path = (FileItem) Database.get(jar).getObj();

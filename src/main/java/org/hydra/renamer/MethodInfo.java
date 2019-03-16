@@ -14,6 +14,8 @@ public class MethodInfo extends AccessableNode implements Comparable<MethodInfo>
     // dependencies in code and signature
     private Set<String> dependencies = new HashSet<String>();
 
+    private Set<MethodInfo> calledFrom = new HashSet<MethodInfo>();
+
     public MethodInfo(String name, String desc, int access, String[] exceptions) {
         super(access);
         this.name = name;

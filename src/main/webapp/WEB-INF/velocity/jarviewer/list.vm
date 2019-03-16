@@ -1,66 +1,13 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>List of uploaded jars</title>
-    <meta name="author" content="Argan Wang">
+#set($pageTitle="List of uploaded jars")
+#parse("/pageheader.vm")
 
-    <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
-    <!--[if lt IE 9]>
-      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-    
-    <script type="text/javascript" src="/static/js/jquery.min.1.7.1.js"></script>
-    <script type="text/javascript" src="/static/js/jquery-ui.min-1.8.9.js"></script>
-    <script type="text/javascript" src="/static/js/jquery.floatinglayer.min.js"></script>
-    
-    <!-- Le styles -->
-    <link href="/static/css/bootstrap-1.4.0.css" rel="stylesheet">
-    <style type="text/css">
-      body {
-        padding-top: 60px;
-      }
-      #fromJar { float: right; width: 300px; height: 50px; border: 1px solid #999;background: #ccc; font-size:16px}
-      #libJars { float: right; width: 300px; height: 100px; border: 1px solid #999; font-size:16px}
-      #btnSubmit {float:right}
-    </style>
-    <!-- Le fav and touch icons -->
-    <link rel="shortcut icon" href="images/favicon.ico">
-    
-	<script language="javascript">
-	
-	function dropFunc(e,ui) {
-        var ele = ui.draggable;
-        $(this).html($(ele).html());
-        $("<input type='hidden' name='fromJar' value='"+$(ele).attr("id")+"'>").appendTo($(this));
-        // $(this).attr("jarid",$(ele).attr("id"));
-	}
-	function dropFunc2(e,ui) {
-        var ele = ui.draggable;   
-        var append = $("<li class='libJars'></li>");
-        append.html($(ele).html()).appendTo(this);
-        //append.attr("jarid",$(ele).attr("id"));
-        $("<input type='hidden' name='libJars' value='"+$(ele).attr("id")+"'>").appendTo($(this));
-	}
-	$(document).ready(function(){     
-	    $(".draggable").each(function() {   
-	      $(this).draggable({helper:"clone"});      
-	      });    
-	    $("#fromJar").droppable({drop:dropFunc});      
-	    $("#libJars").droppable({drop:dropFunc2});  
-	    $('#floating').makeFloating({
-	       position: { x: 'right', y: 'center' }
-	    });    
-	});//ready
-	</script>
-  </head>
   <body>
-    #include("/menu.vm")
-	    <div class="content">
+    #parse("/menu.vm")
+	    <div class="container">
 	    <div class="row">
         <div class="hero-unit">
             <h3>Uploaded files</h3>
-	        <table>
+	        <table class=table>
 	        <tr>
 	          <td>No.</td><td>File Name</td><td>Version</td><td>Operations</td>
 	        </tr>
@@ -99,5 +46,33 @@
         </div>
         </div>
         #include("/footer.vm")
+
+
+	<script language="javascript">
+	
+	function dropFunc(e,ui) {
+        var ele = ui.draggable;
+        $(this).html($(ele).html());
+        $("<input type='hidden' name='fromJar' value='"+$(ele).attr("id")+"'>").appendTo($(this));
+        // $(this).attr("jarid",$(ele).attr("id"));
+	}
+	function dropFunc2(e,ui) {
+        var ele = ui.draggable;   
+        var append = $("<li class='libJars'></li>");
+        append.html($(ele).html()).appendTo(this);
+        //append.attr("jarid",$(ele).attr("id"));
+        $("<input type='hidden' name='libJars' value='"+$(ele).attr("id")+"'>").appendTo($(this));
+	}
+	$(document).ready(function(){     
+	    $(".draggable").each(function() {   
+	      $(this).draggable({helper:"clone"});      
+	      });    
+	    $("#fromJar").droppable({drop:dropFunc});      
+	    $("#libJars").droppable({drop:dropFunc2});  
+	    $('#floating').makeFloating({
+	       position: { x: 'right', y: 'center' }
+	    });    
+	});//ready
+	</script>
     </body>
 </html>

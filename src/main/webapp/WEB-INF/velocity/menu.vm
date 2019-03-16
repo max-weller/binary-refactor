@@ -1,14 +1,21 @@
-    <div class="topbar" style="position:absolute">
-      <div class="topbar-inner">
-        <div class="container-fluid">
-          <a class="brand" href="#">Binary Refactor</a>
-          <ul class="nav">
-            <li class="active"><a href="/jarviewer/list.htm">File List</a></li>
-            <li><a href="/jarviewer/form.htm">Upload File</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="#contact">Contact</a></li>
-          </ul>
-          <p class="pull-right">No login needed.</p>
-        </div>
-      </div>
-    </div>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <span class="navbar-brand">Binary Refactor</span>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item active"><a class="nav-link" href="/jarviewer/list.htm">File List</a></li>
+      <li class="nav-item"><a class="nav-link" href="/jarviewer/form.htm">Upload File</a></li>
+      <li class="nav-item"><a class="nav-link" href="#about">&#187; $jarFile.origName</a></li>
+      #set($pathItems = $clzName.split("/"))
+      <li class="nav-item classfile" style="font-size:140%;padding-top:6px">
+      #foreach($item in $pathItems)
+      <a class=" itm" href="#about">$item</a>
+      #end
+      </li>
+    </ul>
+    <span class="navbar-text">No login needed.</span>
+  </div>
+</nav>

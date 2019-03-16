@@ -23,6 +23,7 @@ public class CfrToHtmlDumper
   implements Dumper
 {
   private int outputCount = 0;
+  private int lineNumber = 1;
   private int indent;
   private boolean atStart = true;
   private boolean pendingCR = false;
@@ -40,7 +41,12 @@ public class CfrToHtmlDumper
   {
     return new CfrToHtmlDumper().dump(d).toString();
   }
-  
+
+  private void incrementLineNumber() {
+    lineNumber++;
+    this.sb.append(String.format("%04d    ",lineNumber));
+  }
+
   public void printLabel(String s)
   {
     processPendingCR();
@@ -64,6 +70,7 @@ public class CfrToHtmlDumper
     if (this.pendingCR)
     {
       this.sb.append('\n');
+      incrementLineNumber();
       this.atStart = true;
       this.pendingCR = false;
     }
@@ -112,6 +119,7 @@ public class CfrToHtmlDumper
     this.sb.append(s.replace("<","&lt;").replace(">","&gt;").replace("\"","&quot;"));
     this.atStart = s.endsWith("\n");
     this.outputCount += 1;
+    if(atStart) incrementLineNumber();
     return this;
   }
   
@@ -122,17 +130,19 @@ public class CfrToHtmlDumper
   
   public Dumper newln()
   {
+    this.outputCount += 1;
     this.sb.append("\n");
     this.atStart = true;
-    this.outputCount += 1;
+    incrementLineNumber();
     return this;
   }
   
   public Dumper endCodeln()
   {
+    this.outputCount += 1;
     this.sb.append(";\n");
     this.atStart = true;
-    this.outputCount += 1;
+    incrementLineNumber();
     return this;
   }
   

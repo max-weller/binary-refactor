@@ -1,16 +1,13 @@
 package org.hydra.renamer;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import org.hydra.gui.web.XrefResultItem;
 import org.hydra.renamer.RenameConfig.ClassRenameInfo;
 import org.hydra.renamer.asm.CollectClassInfoVisitor;
 import org.hydra.util.Log;
@@ -19,6 +16,22 @@ import org.objectweb.asm.ClassReader;
 
 public class ClassMap {
     private Map<String, ClassInfo> map = new TreeMap<String, ClassInfo>();
+    private Map<String, List<MethodInfo>> methodCallXref = new HashMap<String, List<MethodInfo>>();
+
+    private long fileTimestamp;
+
+    public List<MethodInfo> getXref(String classname, String name, String sig) {
+        return methodCallXref.get(classname+" "+name+" "+sig);
+    }
+    public  Map<String, List<MethodInfo>>  getXref() {
+        return methodCallXref;
+    }
+    public void addXref(String to, MethodInfo location) {
+        if (!methodCallXref.containsKey(to)) {
+            methodCallXref.put(to, new ArrayList<MethodInfo>());
+        }
+        methodCallXref.get(to).add(location);
+    }
 
     public ClassInfo getClassInfo(String name) {
         if (name == null) {
@@ -35,6 +48,10 @@ public class ClassMap {
 
     public boolean contains(String name) {
         return this.getClassInfo(name) != null;
+    }
+
+    public Collection<ClassInfo> getClasses() {
+        return map.values();
     }
 
     public Map<String, List<ClassInfo>> getTree() {
@@ -113,8 +130,17 @@ public class ClassMap {
         return String.format("ClassMap {%s}", map);
     }
 
-    public static ClassMap build(JarFile jar) {
+    public static HashMap<String, ClassMap> cache = new HashMap<String, ClassMap>();
+
+    public static ClassMap build(File fileInfo) throws IOException {
+        if (cache.containsKey(fileInfo.getCanonicalPath())) {
+            ClassMap m = cache.get(fileInfo.getCanonicalPath());
+            if (fileInfo.lastModified() <= m.fileTimestamp)
+                return cache.get(fileInfo.getCanonicalPath());
+        }
+        JarFile jar = new JarFile(fileInfo);
         ClassMap map = new ClassMap();
+        map.fileTimestamp = fileInfo.lastModified();
         Enumeration<JarEntry> entries = jar.entries();
         while (entries.hasMoreElements()) {
             JarEntry entry = entries.nextElement();
@@ -132,6 +158,7 @@ public class ClassMap {
                 }
             }
         }
+        cache.put(fileInfo.getCanonicalPath(), map);
         return map;
     }
 
