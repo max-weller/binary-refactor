@@ -1,5 +1,6 @@
 Binary Refactor
 ---
+![screenshot](screenshot.png)
 
 #### Description
 
