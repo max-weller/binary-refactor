@@ -142,10 +142,12 @@
                      out+=renameConfig[className].toString()+"\n";
                  }
                  if(!confirm(out))return;
+                 starttime = +new Date();
                  $.post("/renamer/batch.htm", {id: jarId, renameConfig: out}, function(ok,a1,xhr) {
                      console.log("batch call result:",ok,a1,xhr)
                      if (xhr.status==200){
-                        alert("Done");
+                     	  var duration = new Date() - starttime;
+                        alert("Done in "+(duration/1000)+" sec");
                         window.onbeforeunload=null
                         if(renameConfig[thisClassName]) location.href="/jarviewer/cfrsource.htm?id="+jarId+"&clz="+renameConfig[thisClassName].newName;
                      }else
