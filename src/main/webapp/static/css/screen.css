@@ -22,3 +22,27 @@ h1 { font-size: large }
 #main { padding: 1em; }
 
 a img { border: none; }
+
+
+#filetreeOuterDiv {padding:2px;width:260px;position:fixed;right:0;bottom:0;top:60px;overflow:auto;border-left:1px solid #ccc; box-shadow: 0 0 4px #ddd; }
+.filetree, .filetree ul { padding-left: 22px; }
+.filetree li { list-style:url(images/folder.gif); }
+.filetree li.closed { list-style:url(images/folder-closed.gif); }
+.filetree li.file { list-style:url(images/file.gif); }
+.filetree .closed ul { display:none }
+.filetree .folder, .filetree li.file>a { cursor: pointer; display:block; color: #222 }
+.filetree .folder:hover, .filetree li.file>a:hover { background:#eee }
+
+.filetree li.file.active>a { font-weight:bold; color:#33f;background:#ddd }
+
+
+
+
+#fromJar { float: right; width: 300px; height: 50px; border: 1px solid #999;background: #ccc; font-size:16px}
+#libJars { float: right; width: 300px; height: 100px; border: 1px solid #999; font-size:16px}
+#btnSubmit {float:right}
+.classfile .itm { color:#666; font-size: 70%; font-weight: normal; }
+.classfile .itm::after { content:"/"; color:#bbb; }
+.classfile .itm:last-child { color:#000; font-size: 100%; font-weight: bold; }
+.classfile .itm:last-child::after { content:""; }
+

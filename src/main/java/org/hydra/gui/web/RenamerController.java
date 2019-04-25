@@ -2,6 +2,7 @@ package org.hydra.gui.web;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import org.hydra.renamer.RenameConfig;
 import org.hydra.renamer.Renamer;
@@ -90,4 +91,15 @@ public class RenamerController {
 
         return config;
     }
+
+
+    @RequestMapping(value = "/changelog", method = RequestMethod.GET)
+    public void showChangelog(Model model, @RequestParam("id") String jar) {
+        model.addAttribute("id", jar);
+
+        List<Database.Record> lst = Database.list("changelog-" + jar);
+        model.addAttribute("changelog", lst);
+        
+    }
+
 }

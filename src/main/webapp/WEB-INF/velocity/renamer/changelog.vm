@@ -1,0 +1,25 @@
+#set($pageTitle="ChangeLog")
+#parse("/pageheader.vm")
+
+#macro(esc $name)
+$name.replace("<","&lt;").replace(">","&gt;")
+#end
+  <body>
+    #parse("/menu.vm")
+        <div class="container">
+        <div class="row">
+        <!-- Main hero unit for a primary marketing message or call to action -->
+        <div class="hero-unit">
+          <h3>Changelog for </h3>
+          
+          #foreach($record in $changelog)
+            <pre>$record.obj</pre>
+            <hr>
+          #end
+        </div>
+        </div>
+        </div>
+       
+        #include("/footer.vm")
+    </body>
+</html>

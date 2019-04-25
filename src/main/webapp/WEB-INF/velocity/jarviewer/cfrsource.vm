@@ -28,7 +28,7 @@
 </p>
         </div>
 			<pre id="code">$code</pre>
-            <div style="padding:2px;width:260px;position:fixed;right:0;bottom:0;top:60px;overflow:auto;background:#eee;">
+            <div id="filetreeOuterDiv">
                 <input type="search" id="treeFilter" value="" placeholder="filter by package name...">
                 <div id="filetreeContainer" ></div>
             </div>
