@@ -154,6 +154,13 @@
             <scope>system</scope>
             <systemPath>${project.basedir}/cfr_0_133_patched.jar</systemPath>
         </dependency>
+
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.27.2</version>
+        </dependency>
+
     </dependencies>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
